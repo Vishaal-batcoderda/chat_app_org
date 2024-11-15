@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+</head>
+<body>
+<center>
+    <div  class="b">
+        <h1>Welcome {{ user.username }}</h1>
+        <p>AI - Based Chat Website</p>
+    </div>
+    <div class="e">
+        <p class="c">This is your profile page. You are logged in.</p>
+        <!-- Link to the chat page -->
+        <a href="{% url 'chat' %}" class="d">Go to Chat</a>  <!-- Replace 'chat' with your actual URL name for the chat page -->
+    
+        <br>
+        <a href="{% url 'logout' %}" class="d">Logout</a>
+    </div>
+</center>
+</body>
+</html>

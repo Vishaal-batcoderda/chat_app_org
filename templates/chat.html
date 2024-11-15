@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat App</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h1>Real-Time Chat with Sentiment Analysis</h1>
+    <div id="chat-log" class="border rounded p-3 mb-3" style="height: 300px; overflow-y: scroll;"></div>
+    <input id="chat-message-input" class="form-control" type="text" placeholder="Type a message...">
+    <button id="send-button" class="btn btn-primary mt-2">Send</button>
+</div>
+
+<script>
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/'
+    );
+
+    // Send the message when the button is clicked
+    document.querySelector('#send-button').onclick = function() {
+        const messageInput = document.querySelector('#chat-message-input');
+        const message = messageInput.value;
+        if (message.trim() !== '') {
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInput.value = '';  // Clear the input field
+        }
+    };
+
+    // Handle incoming messages from the server
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const chatLog = document.querySelector('#chat-log');
+
+        if (data.error) {
+            // Display an error message if there is one
+            chatLog.innerHTML += '<p class="text-danger">Error: ' + data.error + '</p>';
+        } else {
+            // Display the message and sentiment label
+            chatLog.innerHTML += (
+                '<p><strong>' + data.user + ':</strong> ' + data.message +
+                ' <span class="badge badge-info">' + data.sentiment + '</span></p>'
+            );
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+    };
+</script>
+
+</body>
+</html>

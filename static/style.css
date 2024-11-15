@@ -1,0 +1,21 @@
+.b{
+    color: white;
+    background-color: black;
+    padding: 10px;
+    font-family: Dubai;
+    animation: example 5s forwards;
+}
+.c{
+    font-family: "Yu Gothic Light";
+    padding-top: 30px;
+    animation: example 5s forwards;
+}
+.d{
+    animation: example 10s forwards;
+}
+@keyframes example{
+    0%, 100% { opacity: 0; }
+    100% { opacity: 1; }
+}
+.e{
+}
