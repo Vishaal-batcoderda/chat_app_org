@@ -11,7 +11,7 @@ router.register(r'messages', MessageViewSet)
 urlpatterns = [
     # Login and Logout
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),  # Ensure this works correctly with logout functionality
 
     # Root path (redirect to login)
     path('', auth_views.LoginView.as_view(template_name='login.html'), name='home'),
@@ -23,5 +23,5 @@ urlpatterns = [
     path('chat/', chat_view, name='chat'),  # Chat page route
 
     # API URLs
-    path('api/', include(router.urls)),
+    path('api/', include(router.urls)),  # API paths for messages
 ]

@@ -9,7 +9,9 @@ sentiment_analyzer = pipeline("sentiment-analysis")
 
 def analyze_sentiment(text):
     analysis = sentiment_analyzer(text)
+    print(analysis)  # Debugging: Check the raw analysis output
     return analysis[0]['label'], analysis[0]['score']
+
 
 
 class MessageViewSet(viewsets.ModelViewSet):

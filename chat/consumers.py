@@ -1,51 +1,64 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .models import Message
-from .views import analyze_sentiment
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        # Create a unique room for each user (could use channels or room groups)
+        self.room_name = 'chat_room'
+        self.room_group_name = f'chat_{self.room_name}'
+
+        # Join the room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
         # Accept the WebSocket connection
         await self.accept()
 
     async def disconnect(self, close_code):
-        # Handle WebSocket disconnection
-        pass
+        # Leave the room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
 
     async def receive(self, text_data):
-        try:
-            # Parse the incoming message from the client
-            data = json.loads(text_data)
-            message_content = data["message"]
+        # Parse the incoming message
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
 
-            # Retrieve the authenticated user
-            user = self.scope.get("user")
-            if user.is_authenticated:
-                username = user.username
-            else:
-                username = "Anonymous"
+        # Simulate sentiment analysis logic (you can replace this with actual analysis)
+        sentiment = self.analyze_sentiment(message)
 
-            # Perform sentiment analysis on the message content
-            sentiment_label, score = analyze_sentiment(message_content)
+        # Send the message with sentiment to the group (all users in the room)
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'chat_message',  # Call the chat_message method
+                'message': message,
+                'sentiment': sentiment,
+                'user': self.scope['user'].username,
+            }
+        )
 
-            # Save the message to the database
-            message = Message.objects.create(
-                user=user,
-                content=message_content
-            )
+    async def chat_message(self, event):
+        # Send the message to WebSocket
+        await self.send(text_data=json.dumps({
+            'user': event['user'],
+            'message': event['message'],
+            'sentiment': event['sentiment'],
+        }))
 
-            # Send the message along with sentiment analysis results to the client
-            await self.send(text_data=json.dumps({
-                'message': message_content,
-                'user': username,
-                'sentiment': sentiment_label,
-                'score': score  # If needed to display the sentiment score
-            }))
-
-        except Exception as e:
-            # Handle any exceptions (e.g., print the error)
-            print(f"Error in processing message: {e}")
-            # Optionally send an error message back to the client
-            await self.send(text_data=json.dumps({
-                'error': 'There was an error processing your message.'
-            }))
+    def analyze_sentiment(self, message):
+        """
+        Simple sentiment analysis function.
+        You can replace this with a machine learning model or API for more accurate sentiment analysis.
+        """
+        # For demonstration, a basic example:
+        if 'good' in message.lower():
+            return 'positive'
+        elif 'bad' in message.lower():
+            return 'negative'
+        else:
+            return 'neutral'

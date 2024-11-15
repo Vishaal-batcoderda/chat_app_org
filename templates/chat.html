@@ -4,29 +4,58 @@
     <meta charset="UTF-8">
     <title>Chat App</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    {% load static %}  <!-- Load static files -->
+    <link rel="stylesheet" href="{% static 'chat.css' %}"> <!-- Link to your chat.css -->
 </head>
 <body>
 <div class="container">
     <h1>Real-Time Chat with Sentiment Analysis</h1>
-    <div id="chat-log" class="border rounded p-3 mb-3" style="height: 300px; overflow-y: scroll;"></div>
-    <input id="chat-message-input" class="form-control" type="text" placeholder="Type a message...">
-    <button id="send-button" class="btn btn-primary mt-2">Send</button>
+
+    <div id="chat-log" class="chat-log"></div> <!-- Chat log with custom styles -->
+
+    <div class="input-group mb-3">
+        <!-- Label added for accessibility -->
+        <label for="chat-message-input" class="sr-only">Message</label>
+        <input id="chat-message-input" class="form-control" type="text" placeholder="Type a message..." aria-label="Type a message">
+        <button id="send-button" class="btn btn-primary">Send</button>
+    </div>
 </div>
 
 <script>
-    const chatSocket = new WebSocket(
-        'ws://' + window.location.host + '/ws/chat/'
-    );
+    // Initialize the WebSocket connection
+    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/');
+
+    // Handle connection open
+    chatSocket.onopen = function() {
+        console.log("WebSocket connection established.");
+    };
+
+    // Handle connection close
+    chatSocket.onclose = function(e) {
+        console.log("WebSocket connection closed", e);
+    };
+
+    // Handle any errors that occur with WebSocket connection
+    chatSocket.onerror = function(event) {
+        console.error("WebSocket error:", event);
+    };
 
     // Send the message when the button is clicked
     document.querySelector('#send-button').onclick = function() {
         const messageInput = document.querySelector('#chat-message-input');
         const message = messageInput.value;
+
+        // Ensure message is not empty
         if (message.trim() !== '') {
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
-            messageInput.value = '';  // Clear the input field
+            // Check if WebSocket is open before sending the message
+            if (chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+                messageInput.value = '';  // Clear the input field
+            } else {
+                console.log("WebSocket is not open yet.");
+            }
         }
     };
 
@@ -39,15 +68,19 @@
             // Display an error message if there is one
             chatLog.innerHTML += '<p class="text-danger">Error: ' + data.error + '</p>';
         } else {
-            // Display the message and sentiment label
+            // Use a fallback sentiment value if not provided
+            const sentiment = data.sentiment ? data.sentiment : 'neutral';  // Default to 'neutral'
+            const sentimentClass = 'sentiment-' + sentiment.toLowerCase();
+
             chatLog.innerHTML += (
-                '<p><strong>' + data.user + ':</strong> ' + data.message +
-                ' <span class="badge badge-info">' + data.sentiment + '</span></p>'
+                `<div class="chat-message ${sentimentClass}">
+                    <strong>${data.user}:</strong> ${data.message}
+                    <span class="badge badge-info">${sentiment}</span>
+                </div>`
             );
-            chatLog.scrollTop = chatLog.scrollHeight;
+            chatLog.scrollTop = chatLog.scrollHeight;  // Auto scroll the chat log
         }
     };
 </script>
-
 </body>
 </html>
