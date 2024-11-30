@@ -1,4 +1,5 @@
 import json
+from textblob import TextBlob  # Import TextBlob
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -28,7 +29,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
 
-        # Simulate sentiment analysis logic (you can replace this with actual analysis)
+        # Perform sentiment analysis
         sentiment = self.analyze_sentiment(message)
 
         # Send the message with sentiment to the group (all users in the room)
@@ -52,13 +53,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     def analyze_sentiment(self, message):
         """
-        Simple sentiment analysis function.
-        You can replace this with a machine learning model or API for more accurate sentiment analysis.
+        Sentiment analysis using TextBlob.
         """
-        # For demonstration, a basic example:
-        if 'good' in message.lower():
+        blob = TextBlob(message)
+        polarity = blob.sentiment.polarity
+        if polarity > 0.2:
             return 'positive'
-        elif 'bad' in message.lower():
+        elif polarity < -0.2:
             return 'negative'
         else:
             return 'neutral'
